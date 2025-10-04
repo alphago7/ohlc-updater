@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      AWS_DEFAULT_REGION: <YOUR_BUCKET_REGION>        # e.g., us-east-1
+      AWS_DEFAULT_REGION: ap-south-1        # e.g., us-east-1
       BUCKET_ROOT: s3://stock-options-ai-app/ohlc
 
     steps:
