@@ -36,3 +36,49 @@ jobs:
           BUCKET_ROOT: s3://stock-options-ai-app/ohlc
           TICKERS_FILE: tickers.txt
         run: python update_daily.py
+
+      - name: Health check
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: <YOUR_BUCKET_REGION>      # e.g., us-east-1 or ap-south-1
+          BUCKET_ROOT: s3://stock-options-ai-app/ohlc
+        run: python health_check.py
+
+      - name: Build features
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: <YOUR_BUCKET_REGION>
+          BUCKET_ROOT: s3://stock-options-ai-app/ohlc
+          TICKERS_FILE: tickers.txt
+        run: python build_features.py
+
+      - name: Signals report
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: <YOUR_BUCKET_REGION>
+          BUCKET_ROOT: s3://stock-options-ai-app/ohlc
+          TICKERS_FILE: tickers.txt
+        run: python signals_report.py
+
+      # Optional: pull latest signals CSV as an artifact for quick download
+      - name: Download latest signals CSV
+        run: |
+          python - <<'PY'
+            import s3fs, os
+            fs = s3fs.S3FileSystem(anon=False)
+            paths = fs.glob("s3://stock-options-ai-app/ohlc/meta/reports/*_signals.csv")
+            print("found", len(paths), "reports")
+            if paths:
+                latest = sorted(paths)[-1]
+            with fs.open(latest) as fr, open("signals.csv","wb") as fw:
+                fw.write(fr.read())
+            print("downloaded: signals.csv")
+            PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: signals-latest
+          path: signals.csv
+          if-no-files-found: ignore
