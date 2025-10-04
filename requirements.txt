@@ -1,0 +1,6 @@
+pandas>=2.2
+pyarrow>=16
+s3fs
+requests
+python-dateutil
+boto3
